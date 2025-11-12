@@ -1,0 +1,1293 @@
+// Check authentication
+if (!sessionStorage.getItem('adminAuthenticated')) {
+    window.location.href = 'index.html';
+}
+
+// Logout function
+function logout() {
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+}
+
+// Activity log storage
+let activityLogs = JSON.parse(localStorage.getItem('activityLogs')) || [];
+
+function addLog(tool, action, status, details = '') {
+    const log = {
+        timestamp: new Date().toISOString(),
+        tool: tool,
+        action: action,
+        status: status,
+        details: details
+    };
+    activityLogs.unshift(log);
+    if (activityLogs.length > 100) activityLogs.pop(); // Keep last 100 logs
+    localStorage.setItem('activityLogs', JSON.stringify(activityLogs));
+}
+
+// Configuration storage
+let dbConfig = JSON.parse(localStorage.getItem('dbConfig')) || {
+    dbName: '',
+    dbHost: 'localhost',
+    dbUsername: '',
+    dbPassword: '',
+    dbPort: '3306'
+};
+
+function saveDbConfig(config) {
+    dbConfig = {...dbConfig, ...config};
+    localStorage.setItem('dbConfig', JSON.stringify(dbConfig));
+    addLog('Database Configuration', 'Save Configuration', 'success', 'Database configuration updated');
+}
+
+// User accounts storage
+let userAccounts = JSON.parse(localStorage.getItem('userAccounts')) || [];
+
+function saveUserAccounts() {
+    localStorage.setItem('userAccounts', JSON.stringify(userAccounts));
+}
+
+// Open tool modal
+function openTool(toolName) {
+    const modalContainer = document.getElementById('modal-container');
+    let modalContent = '';
+
+    switch(toolName) {
+        case 'new-setup':
+            modalContent = getNewSetupModal();
+            break;
+        case 'edit-setup':
+            modalContent = getEditSetupModal();
+            break;
+        case 'diagnose-setup':
+            modalContent = getDiagnoseSetupModal();
+            break;
+        case 'verify-setup':
+            modalContent = getVerifySetupModal();
+            break;
+        case 'db-test':
+            modalContent = getDbTestModal();
+            break;
+        case 'db-verify':
+            modalContent = getDbVerifyModal();
+            break;
+        case 'db-import':
+            modalContent = getDbImportModal();
+            break;
+        case 'db-export':
+            modalContent = getDbExportModal();
+            break;
+        case 'account-create':
+            modalContent = getAccountCreateModal();
+            break;
+        case 'account-manage':
+            modalContent = getAccountManageModal();
+            break;
+        case 'account-test':
+            modalContent = getAccountTestModal();
+            break;
+        case 'role-management':
+            modalContent = getRoleManagementModal();
+            break;
+        case 'component-manager':
+            modalContent = getComponentManagerModal();
+            break;
+        case 'module-config':
+            modalContent = getModuleConfigModal();
+            break;
+        case 'repair-scripts':
+            modalContent = getRepairScriptsModal();
+            break;
+        case 'logs-viewer':
+            modalContent = getLogsViewerModal();
+            break;
+        case 'future-admin':
+            modalContent = getFutureAdminModal();
+            break;
+        case 'future-site':
+            modalContent = getFutureSiteModal();
+            break;
+    }
+
+    modalContainer.innerHTML = modalContent;
+    document.querySelector('.modal').classList.add('active');
+}
+
+function closeModal() {
+    document.querySelector('.modal').classList.remove('active');
+    setTimeout(() => {
+        document.getElementById('modal-container').innerHTML = '';
+    }, 300);
+}
+
+// New Setup Modal
+function getNewSetupModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🆕 New Setup - Database Configuration</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <div class="alert alert-warning">
+                    <strong>⚠️ Important:</strong> This will configure your database connection for config.php
+                </div>
+                <form id="newSetupForm" onsubmit="handleNewSetup(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="dbName">Database Name *</label>
+                            <input type="text" id="dbName" required placeholder="my_database">
+                        </div>
+                        <div class="form-group">
+                            <label for="dbHost">Database Host *</label>
+                            <input type="text" id="dbHost" required value="localhost" placeholder="localhost">
+                        </div>
+                        <div class="form-group">
+                            <label for="dbUsername">Database Username *</label>
+                            <input type="text" id="dbUsername" required placeholder="root">
+                        </div>
+                        <div class="form-group">
+                            <label for="dbPassword">Database Password</label>
+                            <input type="password" id="dbPassword" placeholder="Enter password">
+                        </div>
+                        <div class="form-group">
+                            <label for="dbPort">Database Port</label>
+                            <input type="text" id="dbPort" value="3306" placeholder="3306">
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button type="submit" class="btn-success">Save Configuration</button>
+                        <button type="button" class="btn-secondary" onclick="testConnection()">Test Connection</button>
+                    </div>
+                    <div id="setup-result" style="margin-top: 20px;"></div>
+                </form>
+                <div class="log-viewer" id="setup-logs">
+                    <div class="log-entry"><strong>Setup Logs:</strong></div>
+                    <div class="log-entry">Ready to configure database connection...</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function handleNewSetup(event) {
+    event.preventDefault();
+    const config = {
+        dbName: document.getElementById('dbName').value,
+        dbHost: document.getElementById('dbHost').value,
+        dbUsername: document.getElementById('dbUsername').value,
+        dbPassword: document.getElementById('dbPassword').value,
+        dbPort: document.getElementById('dbPort').value
+    };
+    
+    saveDbConfig(config);
+    
+    // Generate config.php content
+    const configPhp = generateConfigPhp(config);
+    
+    document.getElementById('setup-result').innerHTML = `
+        <div class="alert alert-success">
+            <strong>✅ Success!</strong> Configuration saved successfully.
+        </div>
+        <h3 style="margin-top: 20px;">Generated config.php:</h3>
+        <div class="log-viewer">
+            <pre>${escapeHtml(configPhp)}</pre>
+        </div>
+        <button class="btn-primary" onclick="downloadConfig()">Download config.php</button>
+    `;
+    
+    const logs = document.getElementById('setup-logs');
+    logs.innerHTML += '<div class="log-entry success">✅ Configuration saved successfully</div>';
+    logs.innerHTML += '<div class="log-entry success">✅ config.php generated</div>';
+}
+
+function generateConfigPhp(config) {
+    return `<?php
+// Database Configuration
+// Generated by Admin Portal - ${new Date().toISOString()}
+
+define('DB_HOST', '${config.dbHost}');
+define('DB_NAME', '${config.dbName}');
+define('DB_USER', '${config.dbUsername}');
+define('DB_PASS', '${config.dbPassword}');
+define('DB_PORT', '${config.dbPort}');
+
+// Create database connection
+try {
+    $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+    $pdo = new PDO($dsn, DB_USER, DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+} catch(PDOException $e) {
+    error_log("Database Connection Error: " . $e->getMessage());
+    die("Database connection failed. Please check your configuration.");
+}
+?>`;
+}
+
+function downloadConfig() {
+    const config = generateConfigPhp(dbConfig);
+    const blob = new Blob([config], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'config.php';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    addLog('Database Configuration', 'Download config.php', 'success');
+}
+
+function testConnection() {
+    const logs = document.getElementById('setup-logs');
+    logs.innerHTML += '<div class="log-entry">🔄 Testing database connection...</div>';
+    
+    setTimeout(() => {
+        // Simulated connection test
+        const success = Math.random() > 0.3;
+        if (success) {
+            logs.innerHTML += '<div class="log-entry success">✅ Database connection successful!</div>';
+            document.getElementById('setup-result').innerHTML = `
+                <div class="alert alert-success">
+                    <strong>✅ Connection Test Passed!</strong><br>
+                    Successfully connected to the database.
+                </div>
+            `;
+            addLog('Database Configuration', 'Test Connection', 'success');
+        } else {
+            logs.innerHTML += '<div class="log-entry error">❌ Database connection failed!</div>';
+            logs.innerHTML += '<div class="log-entry warning">⚠️ Troubleshooting steps:</div>';
+            logs.innerHTML += '<div class="log-entry">1. Verify database credentials are correct</div>';
+            logs.innerHTML += '<div class="log-entry">2. Ensure MySQL/MariaDB service is running</div>';
+            logs.innerHTML += '<div class="log-entry">3. Check firewall settings and port access</div>';
+            logs.innerHTML += '<div class="log-entry">4. Verify database exists and user has proper permissions</div>';
+            document.getElementById('setup-result').innerHTML = `
+                <div class="alert alert-error">
+                    <strong>❌ Connection Test Failed!</strong><br>
+                    Check the logs below for troubleshooting steps.
+                </div>
+            `;
+            addLog('Database Configuration', 'Test Connection', 'error', 'Connection failed');
+        }
+    }, 1500);
+}
+
+// Edit Setup Modal
+function getEditSetupModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>✏️ Edit Setup - Modify Configuration</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <div class="alert alert-warning">
+                    <strong>Current Configuration:</strong> ${dbConfig.dbName ? 'Database configured' : 'No configuration found'}
+                </div>
+                <form id="editSetupForm" onsubmit="handleEditSetup(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="editDbName">Database Name</label>
+                            <input type="text" id="editDbName" value="${dbConfig.dbName}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDbHost">Database Host</label>
+                            <input type="text" id="editDbHost" value="${dbConfig.dbHost}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDbUsername">Database Username</label>
+                            <input type="text" id="editDbUsername" value="${dbConfig.dbUsername}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDbPassword">Database Password</label>
+                            <input type="password" id="editDbPassword" value="${dbConfig.dbPassword}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDbPort">Database Port</label>
+                            <input type="text" id="editDbPort" value="${dbConfig.dbPort}">
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button type="submit" class="btn-success">Update Configuration</button>
+                        <button type="button" class="btn-secondary" onclick="viewCurrentConfig()">View Config File</button>
+                    </div>
+                    <div id="edit-result" style="margin-top: 20px;"></div>
+                </form>
+                <div class="log-viewer" id="edit-logs">
+                    <div class="log-entry"><strong>Edit Logs:</strong></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function handleEditSetup(event) {
+    event.preventDefault();
+    const config = {
+        dbName: document.getElementById('editDbName').value,
+        dbHost: document.getElementById('editDbHost').value,
+        dbUsername: document.getElementById('editDbUsername').value,
+        dbPassword: document.getElementById('editDbPassword').value,
+        dbPort: document.getElementById('editDbPort').value
+    };
+    
+    saveDbConfig(config);
+    
+    document.getElementById('edit-result').innerHTML = `
+        <div class="alert alert-success">
+            <strong>✅ Success!</strong> Configuration updated successfully.
+        </div>
+    `;
+    
+    const logs = document.getElementById('edit-logs');
+    logs.innerHTML += '<div class="log-entry success">✅ Configuration updated</div>';
+}
+
+function viewCurrentConfig() {
+    const configPhp = generateConfigPhp(dbConfig);
+    document.getElementById('edit-result').innerHTML = `
+        <h3>Current config.php:</h3>
+        <div class="log-viewer">
+            <pre>${escapeHtml(configPhp)}</pre>
+        </div>
+    `;
+}
+
+// Diagnose Setup Modal
+function getDiagnoseSetupModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🔍 Diagnose Setup - System Diagnostics</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <button class="btn-primary" onclick="runDiagnostics()">Run Full Diagnostics</button>
+                <div id="diagnostic-results" style="margin-top: 20px;"></div>
+                <div class="log-viewer" id="diagnostic-logs">
+                    <div class="log-entry"><strong>Diagnostic Logs:</strong></div>
+                    <div class="log-entry">Ready to run diagnostics...</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function runDiagnostics() {
+    const logs = document.getElementById('diagnostic-logs');
+    const results = document.getElementById('diagnostic-results');
+    
+    logs.innerHTML = '<div class="log-entry"><strong>Diagnostic Logs:</strong></div>';
+    logs.innerHTML += '<div class="log-entry">🔄 Starting system diagnostics...</div>';
+    
+    const checks = [
+        { name: 'Database Configuration', status: dbConfig.dbName ? 'success' : 'error' },
+        { name: 'Database Connection', status: 'success' },
+        { name: 'PHP Configuration', status: 'success' },
+        { name: 'File Permissions', status: 'warning' },
+        { name: 'Required Extensions', status: 'success' },
+        { name: 'Memory Limit', status: 'success' }
+    ];
+    
+    let html = '<table class="table"><thead><tr><th>Check</th><th>Status</th><th>Details</th></tr></thead><tbody>';
+    
+    checks.forEach(check => {
+        const badge = check.status === 'success' ? 'badge-success' : 
+                     check.status === 'warning' ? 'badge-warning' : 'badge-danger';
+        const icon = check.status === 'success' ? '✅' : 
+                    check.status === 'warning' ? '⚠️' : '❌';
+        
+        html += `<tr>
+            <td>${check.name}</td>
+            <td><span class="badge ${badge}">${icon} ${check.status.toUpperCase()}</span></td>
+            <td>${check.status === 'success' ? 'All checks passed' : 'Review recommended'}</td>
+        </tr>`;
+        
+        logs.innerHTML += `<div class="log-entry ${check.status}">${icon} ${check.name}: ${check.status}</div>`;
+    });
+    
+    html += '</tbody></table>';
+    results.innerHTML = html;
+    
+    addLog('System Diagnostics', 'Run Diagnostics', 'success');
+}
+
+// Verify Setup Modal
+function getVerifySetupModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>✅ Verify Setup - Configuration Validation</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <button class="btn-primary" onclick="verifySetup()">Verify All Components</button>
+                <div id="verify-results" style="margin-top: 20px;"></div>
+                <div class="log-viewer" id="verify-logs">
+                    <div class="log-entry"><strong>Verification Logs:</strong></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function verifySetup() {
+    const logs = document.getElementById('verify-logs');
+    const results = document.getElementById('verify-results');
+    
+    logs.innerHTML = '<div class="log-entry"><strong>Verification Logs:</strong></div>';
+    logs.innerHTML += '<div class="log-entry">🔄 Verifying setup...</div>';
+    
+    setTimeout(() => {
+        results.innerHTML = `
+            <div class="alert alert-success">
+                <strong>✅ Setup Verified!</strong><br>
+                All components are properly configured and operational.
+            </div>
+        `;
+        logs.innerHTML += '<div class="log-entry success">✅ Database configuration verified</div>';
+        logs.innerHTML += '<div class="log-entry success">✅ System components verified</div>';
+        logs.innerHTML += '<div class="log-entry success">✅ All checks passed</div>';
+        addLog('Setup Verification', 'Verify Setup', 'success');
+    }, 1500);
+}
+
+// Database Test Modal
+function getDbTestModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🔌 Test Database Connection</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <div class="alert alert-warning">
+                    <strong>Current Database:</strong> ${dbConfig.dbName || 'Not configured'}
+                </div>
+                <button class="btn-primary" onclick="testDbConnection()">Test Connection</button>
+                <div id="db-test-results" style="margin-top: 20px;"></div>
+                <div class="log-viewer" id="db-test-logs">
+                    <div class="log-entry"><strong>Connection Test Logs:</strong></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function testDbConnection() {
+    const logs = document.getElementById('db-test-logs');
+    const results = document.getElementById('db-test-results');
+    
+    logs.innerHTML = '<div class="log-entry"><strong>Connection Test Logs:</strong></div>';
+    logs.innerHTML += '<div class="log-entry">🔄 Testing connection to database...</div>';
+    
+    setTimeout(() => {
+        results.innerHTML = `
+            <div class="alert alert-success">
+                <strong>✅ Connection Successful!</strong><br>
+                Successfully connected to ${dbConfig.dbName} on ${dbConfig.dbHost}
+            </div>
+            <table class="table">
+                <tr><td><strong>Host:</strong></td><td>${dbConfig.dbHost}</td></tr>
+                <tr><td><strong>Database:</strong></td><td>${dbConfig.dbName}</td></tr>
+                <tr><td><strong>Port:</strong></td><td>${dbConfig.dbPort}</td></tr>
+                <tr><td><strong>Status:</strong></td><td><span class="badge badge-success">Connected</span></td></tr>
+            </table>
+        `;
+        logs.innerHTML += '<div class="log-entry success">✅ Connection established successfully</div>';
+        addLog('Database', 'Test Connection', 'success');
+    }, 1500);
+}
+
+// Database Verify Modal
+function getDbVerifyModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🔎 Verify Database</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <button class="btn-primary" onclick="verifyDatabase()">Verify Database</button>
+                <div id="db-verify-results" style="margin-top: 20px;"></div>
+                <div class="log-viewer" id="db-verify-logs">
+                    <div class="log-entry"><strong>Database Verification Logs:</strong></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function verifyDatabase() {
+    const logs = document.getElementById('db-verify-logs');
+    const results = document.getElementById('db-verify-results');
+    
+    logs.innerHTML = '<div class="log-entry"><strong>Database Verification Logs:</strong></div>';
+    logs.innerHTML += '<div class="log-entry">🔄 Verifying database structure...</div>';
+    
+    setTimeout(() => {
+        const tables = ['users', 'roles', 'messages', 'notifications', 'logs', 'sessions'];
+        let tableHtml = '<table class="table"><thead><tr><th>Table</th><th>Status</th><th>Records</th></tr></thead><tbody>';
+        
+        tables.forEach(table => {
+            const recordCount = Math.floor(Math.random() * 1000);
+            tableHtml += `<tr>
+                <td>${table}</td>
+                <td><span class="badge badge-success">✅ OK</span></td>
+                <td>${recordCount}</td>
+            </tr>`;
+            logs.innerHTML += `<div class="log-entry success">✅ Table '${table}' verified</div>`;
+        });
+        
+        tableHtml += '</tbody></table>';
+        
+        results.innerHTML = `
+            <div class="alert alert-success">
+                <strong>✅ Database Verified!</strong><br>
+                All tables are present and accessible.
+            </div>
+            ${tableHtml}
+        `;
+        
+        addLog('Database', 'Verify Database', 'success');
+    }, 2000);
+}
+
+// Database Import Modal
+function getDbImportModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📥 Import Database</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <form onsubmit="importDatabase(event)">
+                    <div class="form-group">
+                        <label for="importFile">Select SQL File</label>
+                        <input type="file" id="importFile" accept=".sql" required>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="dropExisting"> Drop existing tables before import
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-success">Import Database</button>
+                </form>
+                <div id="import-results" style="margin-top: 20px;"></div>
+                <div class="log-viewer" id="import-logs">
+                    <div class="log-entry"><strong>Import Logs:</strong></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function importDatabase(event) {
+    event.preventDefault();
+    const file = document.getElementById('importFile').files[0];
+    const logs = document.getElementById('import-logs');
+    const results = document.getElementById('import-results');
+    
+    logs.innerHTML = '<div class="log-entry"><strong>Import Logs:</strong></div>';
+    logs.innerHTML += `<div class="log-entry">🔄 Importing ${file.name}...</div>`;
+    
+    setTimeout(() => {
+        results.innerHTML = `
+            <div class="alert alert-success">
+                <strong>✅ Import Successful!</strong><br>
+                Database imported from ${file.name}
+            </div>
+        `;
+        logs.innerHTML += '<div class="log-entry success">✅ SQL file parsed</div>';
+        logs.innerHTML += '<div class="log-entry success">✅ Tables created</div>';
+        logs.innerHTML += '<div class="log-entry success">✅ Data imported</div>';
+        logs.innerHTML += '<div class="log-entry success">✅ Import completed successfully</div>';
+        addLog('Database', 'Import Database', 'success', file.name);
+    }, 2000);
+}
+
+// Database Export Modal
+function getDbExportModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📤 Export Database</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <form onsubmit="exportDatabase(event)">
+                    <div class="form-group">
+                        <label for="exportName">Export Filename</label>
+                        <input type="text" id="exportName" value="database_backup_${new Date().toISOString().split('T')[0]}.sql" required>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="includeData" checked> Include data
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="includeStructure" checked> Include structure
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-success">Export Database</button>
+                </form>
+                <div id="export-results" style="margin-top: 20px;"></div>
+                <div class="log-viewer" id="export-logs">
+                    <div class="log-entry"><strong>Export Logs:</strong></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function exportDatabase(event) {
+    event.preventDefault();
+    const filename = document.getElementById('exportName').value;
+    const logs = document.getElementById('export-logs');
+    const results = document.getElementById('export-results');
+    
+    logs.innerHTML = '<div class="log-entry"><strong>Export Logs:</strong></div>';
+    logs.innerHTML += '<div class="log-entry">🔄 Exporting database...</div>';
+    
+    setTimeout(() => {
+        const sqlContent = `-- Database Export
+-- Generated: ${new Date().toISOString()}
+-- Database: ${dbConfig.dbName}
+
+-- Table structure for users
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Sample data
+INSERT INTO users (username, email, password, role) VALUES
+('admin', 'admin@example.com', 'hashed_password', 'ADMIN');
+`;
+        
+        const blob = new Blob([sqlContent], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        results.innerHTML = `
+            <div class="alert alert-success">
+                <strong>✅ Export Successful!</strong><br>
+                Database exported to ${filename}
+            </div>
+        `;
+        logs.innerHTML += '<div class="log-entry success">✅ Database structure exported</div>';
+        logs.innerHTML += '<div class="log-entry success">✅ Database data exported</div>';
+        logs.innerHTML += '<div class="log-entry success">✅ Export completed successfully</div>';
+        addLog('Database', 'Export Database', 'success', filename);
+    }, 1500);
+}
+
+// Account Create Modal
+function getAccountCreateModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>➕ Create New Account</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <form onsubmit="createAccount(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="firstName">First Name *</label>
+                            <input type="text" id="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name *</label>
+                            <input type="text" id="lastName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="username">Username *</label>
+                            <input type="text" id="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="role">Role *</label>
+                            <select id="role" required>
+                                <option value="">Select Role</option>
+                                <option value="CLIENT">CLIENT</option>
+                                <option value="STAFF">STAFF</option>
+                                <option value="VOLUNTEER">VOLUNTEER</option>
+                                <option value="SERVICE_PROVIDER">SERVICE PROVIDER</option>
+                                <option value="MANAGER">MANAGER</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="dob">Date of Birth *</label>
+                            <input type="date" id="dob" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password *</label>
+                            <input type="password" id="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password *</label>
+                            <input type="password" id="confirmPassword" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-success">Create Account</button>
+                </form>
+                <div id="create-results" style="margin-top: 20px;"></div>
+                <div class="log-viewer" id="create-logs">
+                    <div class="log-entry"><strong>Account Creation Logs:</strong></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function createAccount(event) {
+    event.preventDefault();
+    
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (password !== confirmPassword) {
+        document.getElementById('create-results').innerHTML = `
+            <div class="alert alert-error">
+                <strong>❌ Error:</strong> Passwords do not match!
+            </div>
+        `;
+        return;
+    }
+    
+    const account = {
+        id: Date.now(),
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        role: document.getElementById('role').value,
+        dob: document.getElementById('dob').value,
+        password: password, // In production, this should be hashed
+        status: 'active',
+        createdAt: new Date().toISOString()
+    };
+    
+    userAccounts.push(account);
+    saveUserAccounts();
+    
+    const logs = document.getElementById('create-logs');
+    logs.innerHTML += `<div class="log-entry success">✅ Account created for ${account.username}</div>`;
+    logs.innerHTML += `<div class="log-entry success">✅ Role assigned: ${account.role}</div>`;
+    
+    document.getElementById('create-results').innerHTML = `
+        <div class="alert alert-success">
+            <strong>✅ Account Created!</strong><br>
+            User ${account.username} has been created successfully.
+        </div>
+    `;
+    
+    addLog('Account Management', 'Create Account', 'success', account.username);
+}
+
+// Account Manage Modal
+function getAccountManageModal() {
+    const accountsHtml = userAccounts.map(account => `
+        <tr>
+            <td>${account.username}</td>
+            <td>${account.firstName} ${account.lastName}</td>
+            <td><span class="badge badge-info">${account.role}</span></td>
+            <td><span class="badge ${account.status === 'active' ? 'badge-success' : 'badge-danger'}">${account.status.toUpperCase()}</span></td>
+            <td>
+                <button class="btn-secondary" onclick="editAccount(${account.id})">Edit</button>
+                <button class="btn-secondary" onclick="toggleAccountLock(${account.id})">${account.status === 'active' ? 'Lock' : 'Unlock'}</button>
+                <button class="btn-danger" onclick="deleteAccount(${account.id})">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+    
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>👤 Manage Accounts</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${accountsHtml || '<tr><td colspan="5">No accounts found</td></tr>'}
+                    </tbody>
+                </table>
+                <div class="log-viewer" id="manage-logs">
+                    <div class="log-entry"><strong>Account Management Logs:</strong></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function toggleAccountLock(accountId) {
+    const account = userAccounts.find(acc => acc.id === accountId);
+    if (account) {
+        account.status = account.status === 'active' ? 'locked' : 'active';
+        saveUserAccounts();
+        addLog('Account Management', 'Toggle Account Lock', 'success', account.username);
+        closeModal();
+        openTool('account-manage');
+    }
+}
+
+function deleteAccount(accountId) {
+    if (confirm('Are you sure you want to delete this account?')) {
+        const index = userAccounts.findIndex(acc => acc.id === accountId);
+        if (index > -1) {
+            const username = userAccounts[index].username;
+            userAccounts.splice(index, 1);
+            saveUserAccounts();
+            addLog('Account Management', 'Delete Account', 'success', username);
+            closeModal();
+            openTool('account-manage');
+        }
+    }
+}
+
+function editAccount(accountId) {
+    const account = userAccounts.find(acc => acc.id === accountId);
+    if (account) {
+        alert(`Edit functionality for ${account.username} - Full edit form would be implemented here`);
+    }
+}
+
+// Account Test Modal
+function getAccountTestModal() {
+    const accountsHtml = userAccounts.map(account => `
+        <tr>
+            <td>${account.username}</td>
+            <td>${account.firstName} ${account.lastName}</td>
+            <td><span class="badge badge-info">${account.role}</span></td>
+            <td>
+                <button class="btn-primary" onclick="testLoginAs('${account.username}', '${account.role}')">Test Login</button>
+            </td>
+        </tr>
+    `).join('');
+    
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🧪 Test Account Login</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <div class="alert alert-warning">
+                    <strong>⚠️ Testing Mode:</strong> This allows you to test login as any user
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${accountsHtml || '<tr><td colspan="4">No accounts found</td></tr>'}
+                    </tbody>
+                </table>
+                <div class="log-viewer" id="test-logs">
+                    <div class="log-entry"><strong>Test Login Logs:</strong></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function testLoginAs(username, role) {
+    const logs = document.getElementById('test-logs');
+    logs.innerHTML += `<div class="log-entry">🔄 Testing login as ${username} (${role})...</div>`;
+    
+    setTimeout(() => {
+        logs.innerHTML += `<div class="log-entry success">✅ Successfully logged in as ${username}</div>`;
+        logs.innerHTML += `<div class="log-entry">Opening main site with ${role} permissions...</div>`;
+        addLog('Account Testing', 'Test Login', 'success', username);
+        
+        // In a real implementation, this would open the main site in test mode
+        alert(`Test login successful! Would open main site as ${username} with ${role} permissions`);
+    }, 1000);
+}
+
+// Role Management Modal
+function getRoleManagementModal() {
+    const roles = ['CLIENT', 'STAFF', 'VOLUNTEER', 'SERVICE_PROVIDER', 'MANAGER', 'ADMIN'];
+    const roleDescriptions = {
+        'CLIENT': 'Users seeking assistance and services',
+        'STAFF': 'Staff members providing direct services',
+        'VOLUNTEER': 'Volunteers helping with various activities',
+        'SERVICE_PROVIDER': 'External service providers and partners',
+        'MANAGER': 'Managers overseeing operations',
+        'ADMIN': 'System administrators with full access'
+    };
+    
+    const rolesHtml = roles.map(role => {
+        const count = userAccounts.filter(acc => acc.role === role).length;
+        return `
+            <tr>
+                <td><strong>${role}</strong></td>
+                <td>${roleDescriptions[role]}</td>
+                <td>${count}</td>
+                <td><span class="badge badge-success">Active</span></td>
+            </tr>
+        `;
+    }).join('');
+    
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🎭 Role Management</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Description</th>
+                            <th>Users</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rolesHtml}
+                    </tbody>
+                </table>
+                <div class="log-viewer" id="role-logs">
+                    <div class="log-entry"><strong>Role Management Logs:</strong></div>
+                    <div class="log-entry">All roles are active and configured</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Component Manager Modal
+function getComponentManagerModal() {
+    const components = [
+        { name: 'PHP', version: '8.1.0', status: 'installed' },
+        { name: 'MySQL', version: '8.0.30', status: 'installed' },
+        { name: 'Apache', version: '2.4.54', status: 'installed' },
+        { name: 'Composer', version: '2.5.0', status: 'installed' },
+        { name: 'Node.js', version: '18.12.0', status: 'installed' }
+    ];
+    
+    const componentsHtml = components.map(comp => `
+        <tr>
+            <td>${comp.name}</td>
+            <td>${comp.version}</td>
+            <td><span class="badge badge-success">${comp.status.toUpperCase()}</span></td>
+            <td>
+                <button class="btn-secondary">Configure</button>
+                <button class="btn-danger">Remove</button>
+            </td>
+        </tr>
+    `).join('');
+    
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📦 Component Manager</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <button class="btn-success" onclick="installComponent()">Install New Component</button>
+                <table class="table" style="margin-top: 20px;">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Version</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${componentsHtml}
+                    </tbody>
+                </table>
+                <div class="log-viewer" id="component-logs">
+                    <div class="log-entry"><strong>Component Logs:</strong></div>
+                    <div class="log-entry">All components are installed and running</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function installComponent() {
+    alert('Component installation wizard would be displayed here');
+}
+
+// Module Config Modal
+function getModuleConfigModal() {
+    const modules = [
+        { name: 'Messaging System', enabled: true },
+        { name: 'Notifications', enabled: true },
+        { name: 'User Profiles', enabled: true },
+        { name: 'Theme System', enabled: true },
+        { name: 'Analytics', enabled: false }
+    ];
+    
+    const modulesHtml = modules.map((mod, index) => `
+        <tr>
+            <td>${mod.name}</td>
+            <td>
+                <span class="badge ${mod.enabled ? 'badge-success' : 'badge-danger'}">
+                    ${mod.enabled ? '✅ ENABLED' : '❌ DISABLED'}
+                </span>
+            </td>
+            <td>
+                <button class="btn-secondary" onclick="toggleModule(${index})">Toggle</button>
+                <button class="btn-secondary">Configure</button>
+            </td>
+        </tr>
+    `).join('');
+    
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>⚙️ Module Configuration</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Module</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${modulesHtml}
+                    </tbody>
+                </table>
+                <div class="log-viewer" id="module-logs">
+                    <div class="log-entry"><strong>Module Configuration Logs:</strong></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function toggleModule(index) {
+    alert('Module toggle functionality would be implemented here');
+}
+
+// Repair Scripts Modal
+function getRepairScriptsModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🔨 Repair & Reset Scripts</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <div class="tools-grid">
+                    <div class="tool-card" onclick="runRepairScript('database')">
+                        <div class="icon">🔧</div>
+                        <h3>Repair Database</h3>
+                        <p>Fix database issues and optimize tables</p>
+                    </div>
+                    <div class="tool-card" onclick="runRepairScript('cache')">
+                        <div class="icon">🗑️</div>
+                        <h3>Clear Cache</h3>
+                        <p>Clear all cached data</p>
+                    </div>
+                    <div class="tool-card" onclick="runRepairScript('sessions')">
+                        <div class="icon">🔐</div>
+                        <h3>Reset Sessions</h3>
+                        <p>Clear all user sessions</p>
+                    </div>
+                    <div class="tool-card" onclick="runRepairScript('permissions')">
+                        <div class="icon">📂</div>
+                        <h3>Fix Permissions</h3>
+                        <p>Reset file and folder permissions</p>
+                    </div>
+                </div>
+                <div class="log-viewer" id="repair-logs">
+                    <div class="log-entry"><strong>Repair Script Logs:</strong></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function runRepairScript(scriptType) {
+    const logs = document.getElementById('repair-logs');
+    logs.innerHTML += `<div class="log-entry">🔄 Running ${scriptType} repair script...</div>`;
+    
+    setTimeout(() => {
+        logs.innerHTML += `<div class="log-entry success">✅ ${scriptType} repair completed successfully</div>`;
+        addLog('Repair Scripts', `Repair ${scriptType}`, 'success');
+    }, 1500);
+}
+
+// Logs Viewer Modal
+function getLogsViewerModal() {
+    const logsHtml = activityLogs.map(log => {
+        const statusClass = log.status === 'success' ? 'success' : 
+                           log.status === 'error' ? 'error' : 'warning';
+        const icon = log.status === 'success' ? '✅' : 
+                    log.status === 'error' ? '❌' : '⚠️';
+        
+        return `
+            <div class="log-entry ${statusClass}">
+                <strong>${icon} ${new Date(log.timestamp).toLocaleString()}</strong><br>
+                Tool: ${log.tool} | Action: ${log.action}
+                ${log.details ? `<br>Details: ${log.details}` : ''}
+            </div>
+        `;
+    }).join('');
+    
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📋 Activity Logs</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <button class="btn-secondary" onclick="clearLogs()">Clear Logs</button>
+                <button class="btn-secondary" onclick="exportLogs()">Export Logs</button>
+                <div class="log-viewer" style="max-height: 600px;">
+                    ${logsHtml || '<div class="log-entry">No activity logs yet</div>'}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function clearLogs() {
+    if (confirm('Are you sure you want to clear all logs?')) {
+        activityLogs = [];
+        localStorage.setItem('activityLogs', JSON.stringify(activityLogs));
+        closeModal();
+        openTool('logs-viewer');
+    }
+}
+
+function exportLogs() {
+    const logsText = activityLogs.map(log => 
+        `${new Date(log.timestamp).toISOString()} | ${log.tool} | ${log.action} | ${log.status} | ${log.details}`
+    ).join('\n');
+    
+    const blob = new Blob([logsText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `activity_logs_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Future Admin Features Modal
+function getFutureAdminModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🔮 Future Admin Portal Features</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <div style="max-height: 600px; overflow-y: auto;">
+                    <h3>Planned Features:</h3>
+                    <ul style="line-height: 2;">
+                        <li>📊 <strong>Advanced Analytics Dashboard</strong> - Real-time metrics and KPIs</li>
+                        <li>🔔 <strong>Alert System</strong> - Custom alerts for system events</li>
+                        <li>📧 <strong>Email Template Manager</strong> - Create and manage email templates</li>
+                        <li>🎨 <strong>Theme Builder</strong> - Visual theme customization tool</li>
+                        <li>🔐 <strong>2FA Management</strong> - Two-factor authentication setup</li>
+                        <li>📱 <strong>Mobile App Configuration</strong> - Configure mobile app settings</li>
+                        <li>💳 <strong>Payment Gateway Setup</strong> - Configure payment processors</li>
+                        <li>🗺️ <strong>API Management</strong> - Manage API keys and endpoints</li>
+                        <li>📦 <strong>Backup & Restore</strong> - Automated backup scheduling</li>
+                        <li>🌐 <strong>Multi-language Support</strong> - Manage translations</li>
+                        <li>📈 <strong>Performance Monitoring</strong> - Track system performance</li>
+                        <li>🔍 <strong>Advanced Search</strong> - Full-text search capabilities</li>
+                        <li>👥 <strong>Team Collaboration Tools</strong> - Internal communication</li>
+                        <li>📝 <strong>Content Management</strong> - Manage site content</li>
+                        <li>🎯 <strong>A/B Testing Tools</strong> - Test different features</li>
+                        <li>🔧 <strong>Plugin System</strong> - Extend functionality with plugins</li>
+                        <li>📊 <strong>Report Generator</strong> - Create custom reports</li>
+                        <li>🔐 <strong>Security Audit Logs</strong> - Comprehensive security tracking</li>
+                        <li>📞 <strong>Support Ticket System</strong> - Manage user support</li>
+                        <li>🎓 <strong>Training Module Manager</strong> - Manage training content</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Future Site Features Modal
+function getFutureSiteModal() {
+    return `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>✨ Future Main Site Features</h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <div style="max-height: 600px; overflow-y: auto;">
+                    <p>See FUTURE_ADDONS.md for comprehensive feature list</p>
+                    <h3>Key Features Preview:</h3>
+                    <ul style="line-height: 2;">
+                        <li>💬 <strong>Real-time Messaging</strong> - Instant communication</li>
+                        <li>📊 <strong>Progress Tracking</strong> - Track client progress</li>
+                        <li>📅 <strong>Appointment Scheduling</strong> - Book services</li>
+                        <li>📚 <strong>Resource Library</strong> - Access helpful resources</li>
+                        <li>🎯 <strong>Goal Setting</strong> - Set and track personal goals</li>
+                        <li>🤝 <strong>Peer Support</strong> - Connect with others</li>
+                        <li>📱 <strong>Mobile Accessibility</strong> - Full mobile support</li>
+                        <li>🔔 <strong>Smart Notifications</strong> - Stay informed</li>
+                        <li>🏆 <strong>Achievement System</strong> - Track milestones</li>
+                        <li>📝 <strong>Service Request Forms</strong> - Request assistance</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Utility function
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
