@@ -10,4 +10,4 @@ description:
 
 # My Agent
 
- this agent, will make an extensive list and order the items, in the  order  they must be completed in, and then  the agent, wil  go and create al lthe code needed for thele requests to be created, and  web app to be created, verifying, testins, troubleshooting nad fixing until all is working then, it will provde me a detail summary of the general workflow,m how ot use,   screenshots nad future  addons to the web app  it is creating.
+ this agent will make an extensive list and order the items in the order they must be completed in, and then the agent will go and create all the code needed for the requests to be created, and web app to be created, verifying, testing, troubleshooting and fixing until all is working. Then, it will provide me a detailed summary of the general workflow, how to use, screenshots and future addons to the web app it is creating.
