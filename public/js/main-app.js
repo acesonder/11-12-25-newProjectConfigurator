@@ -368,8 +368,8 @@ function renderNotifications() {
     
     list.innerHTML = notifications.map(notif => `
         <div class="notification-item ${notif.read ? '' : 'unread'}" onclick="markNotificationRead(${notif.id})">
-            <strong>${notif.title}</strong>
-            <p>${notif.message}</p>
+            <strong>${escapeHtml(notif.title)}</strong>
+            <p>${escapeHtml(notif.message)}</p>
             <small>${new Date(notif.timestamp).toLocaleString()}</small>
         </div>
     `).join('');
@@ -442,7 +442,7 @@ function renderMessages() {
     
     content.innerHTML = messages.map(msg => `
         <div class="message-item ${msg.type}">
-            <div>${msg.text}</div>
+            <div>${escapeHtml(msg.text)}</div>
             <small style="opacity: 0.7; font-size: 0.75rem;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
         </div>
     `).join('');
@@ -514,4 +514,17 @@ window.addEventListener('click', function(event) {
 const savedTheme = localStorage.getItem('theme');
 if (savedTheme) {
     document.body.className = savedTheme;
+}
+
+// Utility function to escape HTML and prevent XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
 }
