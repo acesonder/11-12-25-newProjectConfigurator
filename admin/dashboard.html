@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - Dashboard</title>
+    <link rel="stylesheet" href="css/admin-style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>🔐 Admin Portal Dashboard</h1>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </header>
+
+        <div class="dashboard-content">
+            <h2 class="section-title">🛠️ Setup & Configuration Tools</h2>
+            <div class="tools-grid">
+                <div class="tool-card" onclick="openTool('new-setup')">
+                    <div class="icon">🆕</div>
+                    <h3>New Setup</h3>
+                    <p>Configure database credentials and initialize new project setup</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('edit-setup')">
+                    <div class="icon">✏️</div>
+                    <h3>Edit Setup</h3>
+                    <p>Modify existing configuration settings and database parameters</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('diagnose-setup')">
+                    <div class="icon">🔍</div>
+                    <h3>Diagnose Setup</h3>
+                    <p>Test connections, verify database, and troubleshoot issues</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('verify-setup')">
+                    <div class="icon">✅</div>
+                    <h3>Verify Setup</h3>
+                    <p>Validate configuration and ensure all components are working</p>
+                </div>
+            </div>
+
+            <h2 class="section-title">💾 Database Management</h2>
+            <div class="tools-grid">
+                <div class="tool-card" onclick="openTool('db-test')">
+                    <div class="icon">🔌</div>
+                    <h3>Test Connection</h3>
+                    <p>Test database connectivity and verify credentials</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('db-verify')">
+                    <div class="icon">🔎</div>
+                    <h3>Verify Database</h3>
+                    <p>Check database integrity and structure</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('db-import')">
+                    <div class="icon">📥</div>
+                    <h3>Import Database</h3>
+                    <p>Import tables, data, or SQL files into database</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('db-export')">
+                    <div class="icon">📤</div>
+                    <h3>Export Database</h3>
+                    <p>Export database structure and data to SQL file</p>
+                </div>
+            </div>
+
+            <h2 class="section-title">👥 Account Management</h2>
+            <div class="tools-grid">
+                <div class="tool-card" onclick="openTool('account-create')">
+                    <div class="icon">➕</div>
+                    <h3>Create Account</h3>
+                    <p>Create new user accounts for all role types</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('account-manage')">
+                    <div class="icon">👤</div>
+                    <h3>Manage Accounts</h3>
+                    <p>View, edit, lock, unlock, or delete user accounts</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('account-test')">
+                    <div class="icon">🧪</div>
+                    <h3>Test Account</h3>
+                    <p>Login as any user for testing purposes</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('role-management')">
+                    <div class="icon">🎭</div>
+                    <h3>Role Management</h3>
+                    <p>Manage user roles: CLIENT, STAFF, VOLUNTEER, SERVICE PROVIDER, ADMIN, MANAGER</p>
+                </div>
+            </div>
+
+            <h2 class="section-title">🔧 System Tools</h2>
+            <div class="tools-grid">
+                <div class="tool-card" onclick="openTool('component-manager')">
+                    <div class="icon">📦</div>
+                    <h3>Component Manager</h3>
+                    <p>Install, configure, verify, or remove system components</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('module-config')">
+                    <div class="icon">⚙️</div>
+                    <h3>Module Configuration</h3>
+                    <p>Configure and manage site modules</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('repair-scripts')">
+                    <div class="icon">🔨</div>
+                    <h3>Repair & Reset Scripts</h3>
+                    <p>Run verification, repair, and reset scripts for modules</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('logs-viewer')">
+                    <div class="icon">📋</div>
+                    <h3>Activity Logs</h3>
+                    <p>View comprehensive activity logs for all tools</p>
+                </div>
+            </div>
+
+            <h2 class="section-title">🚀 Future Features</h2>
+            <div class="tools-grid">
+                <div class="tool-card" onclick="openTool('future-admin')">
+                    <div class="icon">🔮</div>
+                    <h3>Future Admin Features</h3>
+                    <p>View extensive list of planned admin portal features</p>
+                </div>
+
+                <div class="tool-card" onclick="openTool('future-site')">
+                    <div class="icon">✨</div>
+                    <h3>Future Site Features</h3>
+                    <p>View planned features for the main application</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals will be dynamically inserted here -->
+    <div id="modal-container"></div>
+
+    <script src="js/admin-dashboard.js"></script>
+</body>
+</html>

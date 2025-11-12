@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hope Connect - Support Platform</title>
+    <link rel="stylesheet" href="css/main-style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>🤝 Hope Connect</h1>
+            </div>
+            <div class="nav-links">
+                <a href="#home">Home</a>
+                <a href="#about">About</a>
+                <a href="#services">Services</a>
+                <a href="#resources">Resources</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <div class="nav-auth" id="navAuth">
+                <button class="btn-outline" onclick="openAuthModal('login')">Login</button>
+                <button class="btn-primary" onclick="openAuthModal('register')">Get Started</button>
+            </div>
+            <div class="nav-profile" id="navProfile" style="display: none;">
+                <div class="notification-icon" onclick="toggleNotifications()">
+                    🔔
+                    <span class="notification-badge" id="notificationBadge">0</span>
+                </div>
+                <div class="profile-dropdown">
+                    <button class="profile-btn" onclick="toggleProfileMenu()">
+                        <span id="profileName">User</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="profile-menu" id="profileMenu">
+                        <a href="#" onclick="viewProfile()">👤 View Profile</a>
+                        <a href="#" onclick="editProfile()">✏️ Edit Profile</a>
+                        <a href="#" onclick="viewNotifications()">🔔 Notifications</a>
+                        <a href="#" onclick="openSettings()">⚙️ Settings</a>
+                        <a href="#" onclick="changeTheme()">🎨 Change Theme</a>
+                        <a href="#" onclick="logoutUser()">🚪 Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1 class="hero-title">Building Hope, Creating Connections</h1>
+            <p class="hero-subtitle">A comprehensive support platform for individuals facing challenges and those who help them</p>
+            <div class="hero-buttons">
+                <button class="btn-large btn-primary" onclick="openAuthModal('register')">Get Started Today</button>
+                <button class="btn-large btn-outline" onclick="scrollToSection('about')">Learn More</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="section" id="about">
+        <div class="container">
+            <h2 class="section-title">Who We Serve</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🏠</div>
+                    <h3>Individuals Experiencing Homelessness</h3>
+                    <p>Connect with housing resources, shelters, and support services</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💼</div>
+                    <h3>Job Loss Support</h3>
+                    <p>Access employment resources, training, and career counseling</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💚</div>
+                    <h3>Grief & Loss Support</h3>
+                    <p>Find compassionate support and counseling services</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌟</div>
+                    <h3>Substance Use Recovery</h3>
+                    <p>Connect with treatment programs and recovery support</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3>Mental Health Support</h3>
+                    <p>Access crisis intervention and ongoing mental health services</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Helpers & Service Providers</h3>
+                    <p>Tools and resources for staff, volunteers, and service providers</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="section section-alt" id="services">
+        <div class="container">
+            <h2 class="section-title">Platform Features</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">💬</div>
+                    <h3>Instant Messaging</h3>
+                    <p>Real-time communication with support staff and peers</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">📅</div>
+                    <h3>Appointment Scheduling</h3>
+                    <p>Easy booking and management of service appointments</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">📊</div>
+                    <h3>Progress Tracking</h3>
+                    <p>Monitor your journey and celebrate milestones</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">📚</div>
+                    <h3>Resource Library</h3>
+                    <p>Access helpful guides, tools, and educational materials</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🤝</div>
+                    <h3>Case Management</h3>
+                    <p>Coordinated support from dedicated case managers</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🔔</div>
+                    <h3>Smart Notifications</h3>
+                    <p>Stay informed with timely updates and reminders</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Role-Based Features -->
+    <section class="section" id="roles">
+        <div class="container">
+            <h2 class="section-title">Features by Role</h2>
+            <div class="roles-grid">
+                <div class="role-card">
+                    <h3>🙋 CLIENT</h3>
+                    <ul>
+                        <li>Access all support services</li>
+                        <li>Track personal progress</li>
+                        <li>Communicate with staff</li>
+                        <li>Request assistance</li>
+                        <li>Access resources</li>
+                    </ul>
+                </div>
+                <div class="role-card">
+                    <h3>👨‍💼 STAFF</h3>
+                    <ul>
+                        <li>Case management tools</li>
+                        <li>Client progress tracking</li>
+                        <li>Appointment management</li>
+                        <li>Service documentation</li>
+                        <li>Team collaboration</li>
+                    </ul>
+                </div>
+                <div class="role-card">
+                    <h3>🤲 VOLUNTEER</h3>
+                    <ul>
+                        <li>Activity scheduling</li>
+                        <li>Resource distribution</li>
+                        <li>Community support</li>
+                        <li>Event coordination</li>
+                        <li>Impact tracking</li>
+                    </ul>
+                </div>
+                <div class="role-card">
+                    <h3>🏥 SERVICE PROVIDER</h3>
+                    <ul>
+                        <li>Service catalog management</li>
+                        <li>Client referrals</li>
+                        <li>Appointment scheduling</li>
+                        <li>Service reporting</li>
+                        <li>Inter-agency coordination</li>
+                    </ul>
+                </div>
+                <div class="role-card">
+                    <h3>📋 MANAGER</h3>
+                    <ul>
+                        <li>Team oversight</li>
+                        <li>Performance analytics</li>
+                        <li>Resource allocation</li>
+                        <li>Quality assurance</li>
+                        <li>Strategic planning</li>
+                    </ul>
+                </div>
+                <div class="role-card">
+                    <h3>🔐 ADMIN</h3>
+                    <ul>
+                        <li>Full system access</li>
+                        <li>User management</li>
+                        <li>System configuration</li>
+                        <li>Security controls</li>
+                        <li>Platform customization</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resources Section -->
+    <section class="section section-alt" id="resources">
+        <div class="container">
+            <h2 class="section-title">Resources & Support</h2>
+            <div class="resources-grid">
+                <div class="resource-card">
+                    <h3>📞 Crisis Hotlines</h3>
+                    <p>24/7 immediate support for urgent situations</p>
+                    <button class="btn-primary">View Hotlines</button>
+                </div>
+                <div class="resource-card">
+                    <h3>🏠 Housing Resources</h3>
+                    <p>Find emergency and permanent housing options</p>
+                    <button class="btn-primary">Find Housing</button>
+                </div>
+                <div class="resource-card">
+                    <h3>💼 Employment Services</h3>
+                    <p>Job search assistance and career development</p>
+                    <button class="btn-primary">Explore Jobs</button>
+                </div>
+                <div class="resource-card">
+                    <h3>🏥 Healthcare Access</h3>
+                    <p>Connect with healthcare providers and services</p>
+                    <button class="btn-primary">Find Care</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="section" id="contact">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <h3>Contact Information</h3>
+                    <p>📧 Email: support@hopeconnect.org</p>
+                    <p>📞 Phone: 1-800-HOPE-NOW</p>
+                    <p>📍 Address: 123 Hope Street, Community City, ST 12345</p>
+                </div>
+                <div class="contact-form">
+                    <form onsubmit="submitContact(event)">
+                        <input type="text" placeholder="Your Name" required>
+                        <input type="email" placeholder="Your Email" required>
+                        <textarea placeholder="Your Message" rows="4" required></textarea>
+                        <button type="submit" class="btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Hope Connect. All rights reserved.</p>
+            <p>Building bridges to brighter futures.</p>
+        </div>
+    </footer>
+
+    <!-- Authentication Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content auth-modal-content">
+            <button class="close-modal" onclick="closeAuthModal()">×</button>
+            <div id="authModalContent"></div>
+        </div>
+    </div>
+
+    <!-- Notifications Panel -->
+    <div id="notificationsPanel" class="notifications-panel">
+        <div class="notifications-header">
+            <h3>Notifications</h3>
+            <button onclick="closeNotifications()">×</button>
+        </div>
+        <div id="notificationsList" class="notifications-list">
+            <!-- Notifications will be dynamically added -->
+        </div>
+    </div>
+
+    <!-- Instant Messaging Widget -->
+    <div id="messagingWidget" class="messaging-widget" style="display: none;">
+        <div class="messaging-header">
+            <h4>Messages</h4>
+            <button onclick="toggleMessaging()">_</button>
+        </div>
+        <div class="messaging-content" id="messagingContent">
+            <!-- Messages will be dynamically added -->
+        </div>
+        <div class="messaging-input">
+            <input type="text" id="messageInput" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script src="js/main-app.js"></script>
+</body>
+</html>
